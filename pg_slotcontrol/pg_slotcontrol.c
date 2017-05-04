@@ -54,11 +54,8 @@ pg_slotmove(PG_FUNCTION_ARGS)
 	SpinLockRelease(&MyReplicationSlot->mutex);
 
 	if (backwards)
-	{
 		ereport(WARNING,
 				(errmsg("Not moving replication slot backwards!")));
-		PG_RETURN_BOOL(false);
-	}
 
 
 	if (changed)
