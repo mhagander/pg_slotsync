@@ -83,7 +83,11 @@ class ReconnectingPostgres(object):
     def move_slot(self, new_lsn):
         if self.verbose:
             print("Moving slot on %s to %s" % (self.name, new_lsn))
+
         conn = self.get_conn()
+        if not conn:
+            return
+
         curs = conn.cursor()
         curs.execute("SELECT pg_slotmove(%(name)s, %(newpos)s)", {
             'name': self.slotname,
