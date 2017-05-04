@@ -34,6 +34,13 @@ pg_slotmove(PG_FUNCTION_ARGS)
 	/* Temporarily acquire the slot so we "own" it */
 	ReplicationSlotAcquire(slotnamestr);
 
+	if (MyReplicationSlot->data.database != InvalidOid)
+	{
+		ReplicationSlotRelease();
+		ereport(ERROR,
+				(errmsg("Only physical slots can be moved.")));
+	}
+
 	if (moveto > GetXLogWriteRecPtr())
 		/* Can't move past current position, so truncate there */
 		moveto = GetXLogWriteRecPtr();
