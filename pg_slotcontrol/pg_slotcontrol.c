@@ -23,6 +23,7 @@ pg_slotmove(PG_FUNCTION_ARGS)
 	XLogRecPtr	moveto = PG_GETARG_LSN(1);
 	char	   *slotnamestr;
 	bool		changed = false;
+	bool 		backwards = false;
 
 	slotnamestr = text_to_cstring(slotname);
 
@@ -39,8 +40,7 @@ pg_slotmove(PG_FUNCTION_ARGS)
 	{
 		/* Never move backwards, because bad things can happen */
 		if (MyReplicationSlot->data.restart_lsn > moveto)
-			ereport(WARNING,
-					(errmsg("Not moving replication slot backwards!")));
+			backwards = true;
 		else
 		{
 			MyReplicationSlot->data.restart_lsn = moveto;
@@ -48,6 +48,14 @@ pg_slotmove(PG_FUNCTION_ARGS)
 		}
 	}
 	SpinLockRelease(&MyReplicationSlot->mutex);
+
+	if (backwards)
+	{
+		ereport(WARNING,
+				(errmsg("Not moving replication slot backwards!")));
+		PG_RETURN_BOOL(false);
+	}
+
 
 	if (changed)
 	{
