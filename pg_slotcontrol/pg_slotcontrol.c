@@ -34,6 +34,10 @@ pg_slotmove(PG_FUNCTION_ARGS)
 	/* Temporarily acquire the slot so we "own" it */
 	ReplicationSlotAcquire(slotnamestr);
 
+	if (moveto > GetXLogWriteRecPtr())
+		/* Can't move past current position, so truncate there */
+		moveto = GetXLogWriteRecPtr();
+
 	/* Now adjust it */
 	SpinLockAcquire(&MyReplicationSlot->mutex);
 	if (MyReplicationSlot->data.restart_lsn != moveto)
